@@ -219,18 +219,21 @@ int main(int argc, char *argv[]) {
       for(int degree=0; degree<4; degree++) {
         int size = blk_sizes[blk_type];
         int temp_blk[size][size];
-        int *cur_blk = setOfBlockArrays[(blk_type+1)*(degree+1)-1];
+        int *cur_blk = setOfBlockArrays[blk_type*4+degree];
 
         for (int i=0; i<size; i++) {
           for (int j=0; j<size; j++) {
-            temp_blk[i][j] = cur_blk[(i+1)*(j+1)-1]; 
+            temp_blk[i][j] = cur_blk[i*size+j];
           }}
 
         setOfBlockObjects[blk_type][degree] = new Matrix((int *) temp_blk, size, size);
         cout << *setOfBlockObjects[blk_type][degree] <<endl;
       }
     }
+
   return 0;
+
+
   Matrix *iScreen = new Matrix((int *) arrayScreen, ARRAY_DY, ARRAY_DX);
   Matrix *currBlk = new Matrix((int *) arrayBlk, 3, 3);
   Matrix *tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
