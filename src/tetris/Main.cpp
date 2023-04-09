@@ -204,6 +204,7 @@ int arrayBlk[3][3] = {
 };
 
 int main(int argc, char *argv[]) {
+
   srand((unsigned int)time(NULL));
   char key;
   int blkType;
@@ -218,24 +219,25 @@ int main(int argc, char *argv[]) {
   for(int blk_type=0; blk_type<7; blk_type++) {
       for(int degree=0; degree<4; degree++) {
         int size = blk_sizes[blk_type];
-        int temp_blk[size][size];
+        int temp_blk[size][size]; //temp_blk을 블록 사이즈 크기의 2차원 배열로 생성
         int *cur_blk = setOfBlockArrays[blk_type*4+degree];
 
         for (int i=0; i<size; i++) {
           for (int j=0; j<size; j++) {
-            temp_blk[i][j] = cur_blk[i*size+j];
+            temp_blk[i][j] = cur_blk[i*size+j]; //원소에 대응되는 array 원소를 넣기
           }}
 
-        setOfBlockObjects[blk_type][degree] = new Matrix((int *) temp_blk, size, size);
-        cout << *setOfBlockObjects[blk_type][degree] <<endl;
+        setOfBlockObjects[blk_type][degree] = new Matrix((int *) temp_blk, size, size); //2차원 배열을 통해 Matrix생성
+        // cout << *setOfBlockObjects[blk_type][degree] <<endl;
       }
     }
 
-  return 0;
 
 
   Matrix *iScreen = new Matrix((int *) arrayScreen, ARRAY_DY, ARRAY_DX);
-  Matrix *currBlk = new Matrix((int *) arrayBlk, 3, 3);
+  // Matrix *currBlk = new Matrix((int *) arrayBlk, 3, 3);
+  blkType = rand() % MAX_BLK_TYPES;
+  Matrix *currBlk = new Matrix(*setOfBlockObjects[blkType][0]); //랜덤으로 currBlk 할당받기
   Matrix *tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
   Matrix *tempBlk2 = tempBlk->add(currBlk);
   delete tempBlk;
@@ -245,6 +247,8 @@ int main(int argc, char *argv[]) {
   delete tempBlk2;
   drawScreen(oScreen, SCREEN_DW);
   delete oScreen;
+  
+  int is_on_floar = 0;
 
   while ((key = getch()) != 'q') {
     switch (key) {
@@ -255,15 +259,17 @@ int main(int argc, char *argv[]) {
       case ' ': break;
       default: cout << "wrong key input" << endl;
     }
-
+    
     tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
-    tempBlk2 = tempBlk->add(currBlk);
+    tempBlk2 = tempBlk->add(currBlk); //여기가 코드 덤프되는 부분
     delete tempBlk;
+
     if(tempBlk2->anyGreaterThan(1)) {
       switch (key) {
         case 'a': left++; break;
         case 'd': left--; break;
-        case 's': top--; break;
+        case 's': top--; break; //이때 --하고나서 continue 하면 될 듯
+        //그럼 여기서 해결 못함
         case 'w': break;
         case ' ': break;
       }
@@ -272,12 +278,24 @@ int main(int argc, char *argv[]) {
       delete tempBlk;
     }
 
-
     oScreen = new Matrix(iScreen);
     oScreen->paste(tempBlk2, top, left);
     delete tempBlk2;
     drawScreen(oScreen, SCREEN_DW);
-    delete oScreen;
+    
+    Matrix *floar = oScreen->clip(9, 1, 10, 11);
+    cout << *floar << endl;
+    if(floar -> anyGreaterThan(1))
+    {
+      cout << *floar << endl;
+      top = 0, left = 4;
+      blkType = rand() % MAX_BLK_TYPES;
+      iScreen = new Matrix(oScreen);
+      Matrix *currBlk = new Matrix(*setOfBlockObjects[blkType][0]); //랜덤으로 currBlk 할당받기
+      Matrix *tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
+      Matrix *tempBlk2 = tempBlk->add(currBlk);
+    }
+      delete oScreen;
   }
 
   delete iScreen;
