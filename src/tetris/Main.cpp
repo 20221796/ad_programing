@@ -180,21 +180,23 @@ void drawScreen(Matrix *screen, int wall_depth)
 #define SCREEN_DX  10
 #define SCREEN_DW  1
 
-#define ARRAY_DY (SCREEN_DY + SCREEN_DW)
-#define ARRAY_DX (SCREEN_DX + 2*SCREEN_DW)
+#define ARRAY_DY (SCREEN_DY + 3*SCREEN_DW)
+#define ARRAY_DX (SCREEN_DX + 6*SCREEN_DW)
 
 int arrayScreen[ARRAY_DY][ARRAY_DX] = {
-  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-  { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },  
+  {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1},
+  {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1},
+  {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1},
+  {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1},
+  {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1},
+  {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1},
+  {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1},
+  {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1},
+  {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1},
+  {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1},
+  {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+  {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+  {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 };
 
 int arrayBlk[3][3] = {
@@ -203,12 +205,40 @@ int arrayBlk[3][3] = {
   { 0, 0, 0 },
 };
 
+Matrix deleteFullLines(Matrix *screen, int line)
+{
+  int new_screen[ARRAY_DY][ARRAY_DX];
+  int** temp = screen->get_array();
+
+  for (int y=0; y<ARRAY_DY; y++) {
+    for (int x=0; x<ARRAY_DX; x++) {
+      new_screen[y][x] = temp[y][x];
+    }
+  }
+
+  for (int y = line-1; y >= 0; y--) {
+    for (int x = 0; x < ARRAY_DX; x++) {
+      new_screen[y+1][x] = new_screen[y][x];
+      }
+  }
+
+  for (int x = 3; x < 12; x++) {
+    new_screen[0][x] = 0;
+  }
+
+  Matrix tmp((int*) new_screen, ARRAY_DY, ARRAY_DX);
+  return tmp;
+}
+
 int main(int argc, char *argv[]) {
 
   srand((unsigned int)time(NULL));
   char key;
   int blkType;
   int top = 0, left = 4;
+  int is_on_floar = 0;
+  int degree_cnt=0;
+  int degree = 0;
 
   Matrix *setOfBlockObjects[7][4];
 
@@ -233,7 +263,6 @@ int main(int argc, char *argv[]) {
     }
 
 
-
   Matrix *iScreen = new Matrix((int *) arrayScreen, ARRAY_DY, ARRAY_DX);
   // Matrix *currBlk = new Matrix((int *) arrayBlk, 3, 3);
   blkType = rand() % MAX_BLK_TYPES;
@@ -247,16 +276,33 @@ int main(int argc, char *argv[]) {
   delete tempBlk2;
   drawScreen(oScreen, SCREEN_DW);
   delete oScreen;
-  
-  int is_on_floar = 0;
+
 
   while ((key = getch()) != 'q') {
     switch (key) {
       case 'a': left--; break;
       case 'd': left++; break;
       case 's': top++; break;
-      case 'w': break;
-      case ' ': break;
+      case 'w':
+      degree_cnt++;
+      degree = degree_cnt%4;
+      delete currBlk;
+      currBlk = new Matrix(*setOfBlockObjects[blkType][degree]);      
+      break;
+      case ' ':
+      while(1) {
+        top++;
+        tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
+        tempBlk2 = tempBlk->add(currBlk);
+        delete tempBlk;
+        if(tempBlk2->anyGreaterThan(1)) {  
+          top--;
+          is_on_floar++;
+          break;
+        }
+        delete tempBlk2;
+      }
+      break;
       default: cout << "wrong key input" << endl;
     }
     
@@ -268,8 +314,7 @@ int main(int argc, char *argv[]) {
       switch (key) {
         case 'a': left++; break;
         case 'd': left--; break;
-        case 's': top--; break; //이때 --하고나서 continue 하면 될 듯
-        //그럼 여기서 해결 못함
+        case 's': top--; is_on_floar++; break;
         case 'w': break;
         case ' ': break;
       }
@@ -282,20 +327,55 @@ int main(int argc, char *argv[]) {
     oScreen->paste(tempBlk2, top, left);
     delete tempBlk2;
     drawScreen(oScreen, SCREEN_DW);
-    
-    Matrix *floar = oScreen->clip(9, 1, 10, 11);
-    cout << *floar << endl;
-    if(floar -> anyGreaterThan(1))
+
+    // if(floar->anyGreaterThan(0)) //바닥에 블록이 닿으면 새로운 currblk을 뽑기
+    // {
+    //   delete iScreen;
+    //   delete currBlk;
+
+    //   top = 0, left = 4;
+    //   iScreen = new Matrix(oScreen);
+    //   blkType = rand() % MAX_BLK_TYPES;
+    //   currBlk = new Matrix(*setOfBlockObjects[blkType][0]); //랜덤으로 currBlk 할당받기
+    //   tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
+    //   tempBlk2 = tempBlk->add(currBlk);
+    //   delete tempBlk;
+
+    //   delete oScreen;
+    //   oScreen = new Matrix(iScreen);
+    //   oScreen->paste(tempBlk2, top, left);
+    //   delete tempBlk2;
+    //   drawScreen(oScreen, SCREEN_DW);
+    //   delete oScreen;
+    // } //한 번은 괜찮은데 2번째부터 floor에 있는 블록이 그대로라 오류뜸
+
+    if(is_on_floar)
     {
-      cout << *floar << endl;
+      int degree_cnt=0;
+      is_on_floar--;
+      delete iScreen;
+      delete currBlk;
+      
       top = 0, left = 4;
-      blkType = rand() % MAX_BLK_TYPES;
       iScreen = new Matrix(oScreen);
-      Matrix *currBlk = new Matrix(*setOfBlockObjects[blkType][0]); //랜덤으로 currBlk 할당받기
-      Matrix *tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
-      Matrix *tempBlk2 = tempBlk->add(currBlk);
-    }
+      blkType = rand() % MAX_BLK_TYPES;
+      currBlk = new Matrix(*setOfBlockObjects[blkType][0]); //랜덤으로 currBlk 할당받기
+      tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
+      tempBlk2 = tempBlk->add(currBlk);
+      delete tempBlk;
       delete oScreen;
+      oScreen = new Matrix(iScreen);
+      oScreen->paste(tempBlk2, top, left);
+      delete tempBlk2;
+      drawScreen(oScreen, SCREEN_DW);
+    }
+    delete oScreen;
+  }
+  
+  for (int i=0; i<7; i++) {
+    for (int j=0; j<4; j++) {
+      delete setOfBlockObjects[i][j];
+    }
   }
 
   delete iScreen;
