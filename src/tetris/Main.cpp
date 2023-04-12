@@ -205,33 +205,53 @@ int arrayBlk[3][3] = {
   { 0, 0, 0 },
 };
 
-Matrix deleteFullLines(Matrix *screen, int line)
+// Matrix deleteFullLines(Matrix *screen, int line)
+// {
+//   int new_screen[ARRAY_DY][ARRAY_DX];
+//   int** temp = screen->get_array();
+
+//   for (int y=0; y<ARRAY_DY; y++) {
+//     for (int x=0; x<ARRAY_DX; x++) {
+//       new_screen[y][x] = temp[y][x]; //이중 포인터로 만든 배열을 2차원 배열에 복사
+//     }
+//   }
+
+//   for (int y = line-1; y >= 0; y--) {
+//     for (int x = 0; x < ARRAY_DX; x++) {
+//       new_screen[y+1][x] = new_screen[y][x]; //삭제할 라인까지 한 줄씩 내리기
+//       }
+//   }
+
+//   for (int x = 3; x < 12; x++) { //맨 위에는 0으로 다시 채우기
+//     new_screen[0][x] = 0;
+//   }
+
+//   Matrix tmp((int*) new_screen, ARRAY_DY, ARRAY_DX);
+//   return tmp;
+// }
+
+Matrix deleteFullLines(Matrix *screen)
 {
-  int new_screen[ARRAY_DY][ARRAY_DX];
-  int** temp = screen->get_array();
+  Matrix *space = new Matrix(1,10);
 
-  for (int y=0; y<ARRAY_DY; y++) {
-    for (int x=0; x<ARRAY_DX; x++) {
-      new_screen[y][x] = temp[y][x];
-    }
-  }
-
-  for (int y = line-1; y >= 0; y--) {
-    for (int x = 0; x < ARRAY_DX; x++) {
-      new_screen[y+1][x] = new_screen[y][x];
+  for (int line = 9; line >= 0; line--) {
+      Matrix *check_line = screen->clip(line, 3, line+1, 12);
+      if((check_line->sum()) == 9) {
+        for (int y=line-1; y>=0; y--) {
+          Matrix *temp = screen->clip(y, 3, y+1, 12);
+          screen->paste(temp, y+1, 3);
+          delete temp;
+        }      
+        screen->paste(space, 0, 3);
       }
+    delete check_line;
   }
-
-  for (int x = 3; x < 12; x++) {
-    new_screen[0][x] = 0;
-  }
-
-  Matrix tmp((int*) new_screen, ARRAY_DY, ARRAY_DX);
-  return tmp;
+  delete space;
+  return screen;
 }
 
-int main(int argc, char *argv[]) {
 
+int main(int argc, char *argv[]) {
   srand((unsigned int)time(NULL));
   char key;
   int blkType;
@@ -258,7 +278,6 @@ int main(int argc, char *argv[]) {
           }}
 
         setOfBlockObjects[blk_type][degree] = new Matrix((int *) temp_blk, size, size); //2차원 배열을 통해 Matrix생성
-        // cout << *setOfBlockObjects[blk_type][degree] <<endl;
       }
     }
 
@@ -266,27 +285,10 @@ int main(int argc, char *argv[]) {
   Matrix *iScreen = new Matrix((int *) arrayScreen, ARRAY_DY, ARRAY_DX);
   // Matrix *currBlk = new Matrix((int *) arrayBlk, 3, 3);
   blkType = rand() % MAX_BLK_TYPES;
-  Matrix *currBlk = new Matrix(*setOfBlockObjects[blkType][0]); //랜덤으로 currBlk 할당받기
+  Matrix *currBlk = setOfBlockObjects[blkType][0]; //랜덤으로 currBlk 할당받기
   Matrix *tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
   Matrix *tempBlk2 = tempBlk->add(currBlk);
   delete tempBlk;
-
-  // Matrix *tmp_screen = new Matrix(iScreen);
-  // int full = 0;
-  // int** screen_arr = iScreen->get_array();
-  // for (int y = 10; y > 1; y--) {
-  //   for (int x=3; x<12; x++) {
-  //     full = 1; 
-  //     // cout << screen_arr[y][x];
-  //     if (screen_arr[y][x] == 0) {
-  //       full = 0;
-  //       break;
-  //     }
-  //     if(full) (*tmp_screen) = deleteFullLines(tmp_screen, y);
-  //   }
-  //   // cout<<endl;
-  // }
-  // cout<<*tmp_screen<<endl;
 
   Matrix *oScreen = new Matrix(iScreen);
   oScreen->paste(tempBlk2, top, left);
@@ -302,8 +304,8 @@ int main(int argc, char *argv[]) {
       case 'w':
       degree_cnt++;
       degree = degree_cnt%4;
-      delete currBlk;
-      currBlk = new Matrix(*setOfBlockObjects[blkType][degree]);      
+      // delete currBlk;
+      currBlk = setOfBlockObjects[blkType][degree];      
       break;
       case ' ':
       while(1) {
@@ -344,56 +346,39 @@ int main(int argc, char *argv[]) {
     delete tempBlk2;
     drawScreen(oScreen, SCREEN_DW);
 
-    // if(floar->anyGreaterThan(0)) //바닥에 블록이 닿으면 새로운 currblk을 뽑기
-    // {
-    //   delete iScreen;
-    //   delete currBlk;
-
-    //   top = 0, left = 4;
-    //   iScreen = new Matrix(oScreen);
-    //   blkType = rand() % MAX_BLK_TYPES;
-    //   currBlk = new Matrix(*setOfBlockObjects[blkType][0]); //랜덤으로 currBlk 할당받기
-    //   tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
-    //   tempBlk2 = tempBlk->add(currBlk);
-    //   delete tempBlk;
-
-    //   delete oScreen;
-    //   oScreen = new Matrix(iScreen);
-    //   oScreen->paste(tempBlk2, top, left);
-    //   delete tempBlk2;
-    //   drawScreen(oScreen, SCREEN_DW);
-    //   delete oScreen;
-    // } //한 번은 괜찮은데 2번째부터 floor에 있는 블록이 그대로라 오류뜸
-
     if(is_on_floar)
     {
       int degree_cnt=0;
       int full=0;
       is_on_floar--;
       delete iScreen;
-      delete currBlk;
+      // delete currBlk;
 
       top = 0, left = 4;
 
-      Matrix *tmp_screen = new Matrix(oScreen);
-      delete oScreen;
-      int** screen_arr = iScreen->get_array();
+      // Matrix *tmp_screen = new Matrix(oScreen);
+      // delete oScreen;
+      // int** screen_arr = iScreen->get_array();
       
-      for (int y = 9; y > 1; y--) {
-        for (int x=3; x<13; x++) {
-          full = 1; 
-          if (screen_arr[y][x] == 0) {
-            full = 0;
-            break;
-          }
-        }
-        if(full) (*tmp_screen) = deleteFullLines(tmp_screen, y);
-      }
+      // for (int y = 9; y > 1; y--) {
+      //   for (int x=3; x<13; x++) {
+      //     full = 1; 
+      //     if (screen_arr[y][x] == 0) { //한 원소라도 0이면 라인 삭제 안 함 
+      //       full = 0;
+      //       break;
+      //     }
+      //   }
+      //   if(full) (*tmp_screen) = deleteFullLines(tmp_screen, y);
+      // }
 
-      iScreen = new Matrix(tmp_screen);
-      delete tmp_screen;
+      // iScreen = new Matrix(tmp_screen);
+      // delete tmp_screen;
+
+      iScreen = new Matrix(deleteFullLines(oScreen));
+      delete oScreen;
+
       blkType = rand() % MAX_BLK_TYPES;
-      currBlk = new Matrix(*setOfBlockObjects[blkType][0]); //랜덤으로 currBlk 할당받기
+      currBlk = setOfBlockObjects[blkType][0]; //랜덤으로 currBlk 할당받기
       tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
       tempBlk2 = tempBlk->add(currBlk);
       delete tempBlk;
@@ -401,7 +386,7 @@ int main(int argc, char *argv[]) {
       if(tempBlk2->anyGreaterThan(1))
       {
         delete tempBlk2;
-        cout << "Game over!" << endl;
+        cout << "Game over!" << endl; //새로운 블록이 바로 충돌하면 게임 끝내기
         break;
       }
 
@@ -420,7 +405,7 @@ int main(int argc, char *argv[]) {
   }
 
   delete iScreen;
-  delete currBlk;
+  // delete currBlk;
   // delete tempBlk;
   // delete tempBlk2;
   // delete oScreen;
