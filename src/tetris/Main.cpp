@@ -271,12 +271,28 @@ int main(int argc, char *argv[]) {
   Matrix *tempBlk2 = tempBlk->add(currBlk);
   delete tempBlk;
 
+  // Matrix *tmp_screen = new Matrix(iScreen);
+  // int full = 0;
+  // int** screen_arr = iScreen->get_array();
+  // for (int y = 10; y > 1; y--) {
+  //   for (int x=3; x<12; x++) {
+  //     full = 1; 
+  //     // cout << screen_arr[y][x];
+  //     if (screen_arr[y][x] == 0) {
+  //       full = 0;
+  //       break;
+  //     }
+  //     if(full) (*tmp_screen) = deleteFullLines(tmp_screen, y);
+  //   }
+  //   // cout<<endl;
+  // }
+  // cout<<*tmp_screen<<endl;
+
   Matrix *oScreen = new Matrix(iScreen);
   oScreen->paste(tempBlk2, top, left);
   delete tempBlk2;
   drawScreen(oScreen, SCREEN_DW);
   delete oScreen;
-
 
   while ((key = getch()) != 'q') {
     switch (key) {
@@ -352,18 +368,43 @@ int main(int argc, char *argv[]) {
     if(is_on_floar)
     {
       int degree_cnt=0;
+      int full=0;
       is_on_floar--;
       delete iScreen;
       delete currBlk;
-      
+
       top = 0, left = 4;
-      iScreen = new Matrix(oScreen);
+
+      Matrix *tmp_screen = new Matrix(oScreen);
+      delete oScreen;
+      int** screen_arr = iScreen->get_array();
+      
+      for (int y = 9; y > 1; y--) {
+        for (int x=3; x<13; x++) {
+          full = 1; 
+          if (screen_arr[y][x] == 0) {
+            full = 0;
+            break;
+          }
+        }
+        if(full) (*tmp_screen) = deleteFullLines(tmp_screen, y);
+      }
+
+      iScreen = new Matrix(tmp_screen);
+      delete tmp_screen;
       blkType = rand() % MAX_BLK_TYPES;
       currBlk = new Matrix(*setOfBlockObjects[blkType][0]); //랜덤으로 currBlk 할당받기
       tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
       tempBlk2 = tempBlk->add(currBlk);
       delete tempBlk;
-      delete oScreen;
+
+      if(tempBlk2->anyGreaterThan(1))
+      {
+        delete tempBlk2;
+        cout << "Game over!" << endl;
+        break;
+      }
+
       oScreen = new Matrix(iScreen);
       oScreen->paste(tempBlk2, top, left);
       delete tempBlk2;
