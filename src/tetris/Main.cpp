@@ -205,50 +205,49 @@ int arrayBlk[3][3] = {
   { 0, 0, 0 },
 };
 
-// Matrix deleteFullLines(Matrix *screen, int line)
-// {
-//   int new_screen[ARRAY_DY][ARRAY_DX];
-//   int** temp = screen->get_array();
-
-//   for (int y=0; y<ARRAY_DY; y++) {
-//     for (int x=0; x<ARRAY_DX; x++) {
-//       new_screen[y][x] = temp[y][x]; //이중 포인터로 만든 배열을 2차원 배열에 복사
-//     }
-//   }
-
-//   for (int y = line-1; y >= 0; y--) {
-//     for (int x = 0; x < ARRAY_DX; x++) {
-//       new_screen[y+1][x] = new_screen[y][x]; //삭제할 라인까지 한 줄씩 내리기
-//       }
-//   }
-
-//   for (int x = 3; x < 12; x++) { //맨 위에는 0으로 다시 채우기
-//     new_screen[0][x] = 0;
-//   }
-
-//   Matrix tmp((int*) new_screen, ARRAY_DY, ARRAY_DX);
-//   return tmp;
-// }
-
 Matrix deleteFullLines(Matrix *screen)
 {
   Matrix *space = new Matrix(1,10);
 
   for (int line = 9; line >= 0; line--) {
-      Matrix *check_line = screen->clip(line, 3, line+1, 12);
-      if((check_line->sum()) == 9) {
+    Matrix *check_line = screen->clip(line, 3, line+1, 13);
+    while((check_line->sum()) == 10) {
         for (int y=line-1; y>=0; y--) {
-          Matrix *temp = screen->clip(y, 3, y+1, 12);
+          Matrix *temp = screen->clip(y, 3, y+1, 13);
           screen->paste(temp, y+1, 3);
           delete temp;
-        }      
-        screen->paste(space, 0, 3);
-      }
+        }
+      screen->paste(space, 0, 3);
+      delete check_line;
+      Matrix *check_line = screen->clip(line, 3, line+1, 13);
+    }
     delete check_line;
   }
+  
   delete space;
   return screen;
 }
+
+// Matrix deleteFullLines(Matrix *screen)
+// {
+//   Matrix *space = new Matrix(1,10);
+
+//   for (int line = 9; line >= 0; line--) {
+//       Matrix *check_line = screen->clip(line, 3, line+1, 13);
+//       if((check_line->sum()) == 10) {
+//         for (int y=line-1; y>=0; y--) {
+//           Matrix *temp = screen->clip(y, 3, y+1, 13);
+//           screen->paste(temp, y+1, 3);
+//           delete temp;
+//         }      
+//         screen->paste(space, 0, 3);
+//       }
+//     delete check_line;
+//   }
+//   delete space;
+//   cout << *screen << endl;
+//   return screen;
+// }
 
 
 int main(int argc, char *argv[]) {
@@ -283,7 +282,6 @@ int main(int argc, char *argv[]) {
 
 
   Matrix *iScreen = new Matrix((int *) arrayScreen, ARRAY_DY, ARRAY_DX);
-  // Matrix *currBlk = new Matrix((int *) arrayBlk, 3, 3);
   blkType = rand() % MAX_BLK_TYPES;
   Matrix *currBlk = setOfBlockObjects[blkType][0]; //랜덤으로 currBlk 할당받기
   Matrix *tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
@@ -304,7 +302,6 @@ int main(int argc, char *argv[]) {
       case 'w':
       degree_cnt++;
       degree = degree_cnt%4;
-      // delete currBlk;
       currBlk = setOfBlockObjects[blkType][degree];      
       break;
       case ' ':
@@ -313,13 +310,14 @@ int main(int argc, char *argv[]) {
         tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
         tempBlk2 = tempBlk->add(currBlk);
         delete tempBlk;
-        if(tempBlk2->anyGreaterThan(1)) {  
+        if(tempBlk2->anyGreaterThan(1)) {
           top--;
           is_on_floar++;
           break;
         }
         delete tempBlk2;
       }
+      delete tempBlk2;
       break;
       default: cout << "wrong key input" << endl;
     }
@@ -333,9 +331,13 @@ int main(int argc, char *argv[]) {
         case 'a': left++; break;
         case 'd': left--; break;
         case 's': top--; is_on_floar++; break;
-        case 'w': break;
+        case 'w':
+          degree_cnt--;
+          degree = degree_cnt%4;
+          currBlk = setOfBlockObjects[blkType][degree]; break;
         case ' ': break;
       }
+      delete tempBlk2;
       tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
       tempBlk2 = tempBlk->add(currBlk);
       delete tempBlk;
@@ -345,35 +347,15 @@ int main(int argc, char *argv[]) {
     oScreen->paste(tempBlk2, top, left);
     delete tempBlk2;
     drawScreen(oScreen, SCREEN_DW);
-
+    
     if(is_on_floar)
     {
-      int degree_cnt=0;
+      degree_cnt=0;
       int full=0;
       is_on_floar--;
-      delete iScreen;
-      // delete currBlk;
-
       top = 0, left = 4;
 
-      // Matrix *tmp_screen = new Matrix(oScreen);
-      // delete oScreen;
-      // int** screen_arr = iScreen->get_array();
-      
-      // for (int y = 9; y > 1; y--) {
-      //   for (int x=3; x<13; x++) {
-      //     full = 1; 
-      //     if (screen_arr[y][x] == 0) { //한 원소라도 0이면 라인 삭제 안 함 
-      //       full = 0;
-      //       break;
-      //     }
-      //   }
-      //   if(full) (*tmp_screen) = deleteFullLines(tmp_screen, y);
-      // }
-
-      // iScreen = new Matrix(tmp_screen);
-      // delete tmp_screen;
-
+      delete iScreen;
       iScreen = new Matrix(deleteFullLines(oScreen));
       delete oScreen;
 
@@ -406,9 +388,6 @@ int main(int argc, char *argv[]) {
 
   delete iScreen;
   // delete currBlk;
-  // delete tempBlk;
-  // delete tempBlk2;
-  // delete oScreen;
 
   cout << "(nAlloc, nFree) = (" << Matrix::get_nAlloc() << ',' << Matrix::get_nFree() << ")" << endl;  
   cout << "Program terminated!" << endl;
