@@ -106,14 +106,14 @@ Matrix *Matrix::add(const Matrix *obj) {
 }
 
 //  실습: 108 ~ 125
-// const Matrix operator+(const Matrix& m1, const Matrix& m2) {    // friend function
-//   if((m1.dx != m2.dx) || (m1.dy != m2.dy)) return Matrix();
-//   Matrix temp(m1.dy, m1.dx);
-//   for (int y = 0; y < m1.dy; y++)
-//     for (int x = 0; x < m1.dx; x++)
-//       temp.array[y][x] = m1.array[y][x] + m2.array[y][x];
-//   return temp;
-// }
+const Matrix operator+(const Matrix& m1, const Matrix& m2) {    // friend function
+  if((m1.dx != m2.dx) || (m1.dy != m2.dy)) return Matrix();
+  Matrix temp(m1.dy, m1.dx);
+  for (int y = 0; y < m1.dy; y++)
+    for (int x = 0; x < m1.dx; x++)
+      temp.array[y][x] = m1.array[y][x] + m2.array[y][x];
+  return temp;
+}
 
 // Matrix Matrix::operator + (const Matrix & m2) {   // member function
 //   if((dx != m2.dx) || (dy != m2.dy)) return Matrix();
