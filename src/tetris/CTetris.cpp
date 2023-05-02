@@ -85,29 +85,37 @@ TetrisState CTetris::accept(char key) {
   TetrisState _state = Tetris::accept(key); // call superclass' function
 
   // write the rest of this function!!
-  //Tetirs 클래스와 left top 값을 공유함
+  //Tetirs 클래스와 type degree / left top 값을 공유함
   //이동하는 거 트래킹만 해주면 됨
   
   if (_state == TetrisState::Finished)
     return _state;
 
-  else if (_state == TetrisState::NewBlock) { 
-
-  
-  currCBlk = setOfColorBlockObjects[type][degree];
+  currCBlk = setOfColorBlockObjects[type][degree]; //Tetris에서 변경된 type이랑 degree로 currCBlk 결정
   Matrix *tempBlk = iCScreen->clip(top, left, top + currCBlk->get_dy(), left + currCBlk->get_dx());
   Matrix *tempBlk2 = tempBlk->add(currCBlk);
   delete tempBlk;
-  oCScreen->paste(iScreen, 0, 0);
+  oCScreen->paste(iCScreen, 0, 0);
   oCScreen->paste(tempBlk2, top, left);
   delete tempBlk2;
-  }
+
   // you can use the following code if you want to
   // oCScreen = deleteFullLines(oCScreen, currCBlk, top, wallDepth);
-  else if (state == TetrisState::Running) {
-  
 
+  if (_state == TetrisState::NewBlock) {
+    oCScreen = deleteFullLines(oCScreen, currCBlk, top, wallDepth);
+    iCScreen->paste(oCScreen, 0, 0);
   }
+
+  // else if (_state == TetrisState::Running) {
+  //   currCBlk = setOfColorBlockObjects[type][degree];
+  //   Matrix *tempBlk = iCScreen->clip(top, left, top + currCBlk->get_dy(), left + currCBlk->get_dx());
+  //   Matrix *tempBlk2 = tempBlk->add(currCBlk);
+  //   delete tempBlk;
+  //   oCScreen->paste(iCScreen, 0, 0);
+  //   oCScreen->paste(tempBlk2, top, left);
+  //   delete tempBlk2;
+  // }
 
   return _state;
 }
