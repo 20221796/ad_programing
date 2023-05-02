@@ -11,14 +11,13 @@
 
 #include "colors.h"
 #include "Matrix.h"
-#include "Tetris.h"
 
 using namespace std;
 
 
-/********************************************************/
-/**************** Linux System Functions *********************/
-/********************************************************/
+/**************************************************************/
+/**************** Linux System Functions **********************/
+/**************************************************************/
 
 char saved_key = 0;
 int tty_raw(int fd);	/* put terminal into a raw mode */
@@ -167,7 +166,7 @@ void drawScreen(Matrix *screen, int wall_depth)
       else if (array[y][x] == 70)
 	      cout << "♥ ";
       else
-	      cout << "XX ";
+	      cout << "X ";
     }
     cout << endl;
   }
@@ -177,33 +176,92 @@ void drawScreen(Matrix *screen, int wall_depth)
 /******************** Tetris Main Loop ************************/
 /**************************************************************/
 
+#define SCREEN_DY  10
+#define SCREEN_DX  10
+#define SCREEN_DW  1
+
+#define ARRAY_DY (SCREEN_DY + SCREEN_DW)
+#define ARRAY_DX (SCREEN_DX + 2*SCREEN_DW)
+
+int arrayScreen[ARRAY_DY][ARRAY_DX] = {
+  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+  { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+  { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },  
+};
+
+int arrayBlk[3][3] = {
+  { 0, 1, 0 },
+  { 1, 1, 1 },
+  { 0, 0, 0 },
+};
+
 int main(int argc, char *argv[]) {
   char key;
-  registerAlarm(); // register one-second timer
-  srand((unsigned int)time(NULL)); // init the random number generator
-  
-  TetrisState state;
-  Tetris::init(setOfBlockArrays, MAX_BLK_TYPES, MAX_BLK_DEGREES);
-  Tetris *board = new Tetris(10, 10);
-  key = (char) ('0' + rand() % board->get_numTypes());
-  board->accept(key);
-  drawScreen(board->get_oScreen(), board->get_wallDepth()); cout << endl;
+  int top = 0, left = 4;
+
+  Matrix *iScreen = new Matrix((int *) arrayScreen, ARRAY_DY, ARRAY_DX);
+  Matrix *currBlk = new Matrix((int *) arrayBlk, 3, 3);
+  Matrix *tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
+  Matrix *tempBlk2 = tempBlk->add(currBlk);
+  delete tempBlk;
+
+  Matrix *oScreen = new Matrix(iScreen);
+  oScreen->paste(tempBlk2, top, left);
+  delete tempBlk2;
+  drawScreen(oScreen, SCREEN_DW);
+  delete oScreen;
 
   while ((key = getch()) != 'q') {
-    state = board->accept(key);
-    drawScreen(board->get_oScreen(), board->get_wallDepth()); cout << endl;
-    if (state == TetrisState::NewBlock) {
-      key = (char) ('0' + rand() % board->get_numTypes());
-      state = board->accept(key);
-      drawScreen(board->get_oScreen(), board->get_wallDepth()); cout << endl;
-      if (state == TetrisState::Finished) 
-        break;
+    switch (key) {
+      case 'a': left--; break;
+      case 'd': left++; break;
+      case 's': top++; break;
+      case 'w': break;
+      case ' ': break;
+      default: cout << "wrong key input" << endl;
     }
+
+    tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
+    tempBlk2 = tempBlk->add(currBlk);
+    delete tempBlk;
+    if (tempBlk2->anyGreaterThan(1)) {
+      switch (key) {
+        case 'a': left++; break;
+        case 'd': left--; break;
+        case 's': top--; break;
+        case 'w': break;
+        case ' ': break;
+      }
+      delete tempBlk2;
+      tempBlk = iScreen->clip(top, left, top + currBlk->get_dy(), left + currBlk->get_dx());
+      tempBlk2 = tempBlk->add(currBlk);    
+      delete tempBlk;
+    }
+    
+    oScreen = new Matrix(iScreen);
+    oScreen->paste(tempBlk2, top, left);
+    delete tempBlk2;
+    drawScreen(oScreen, SCREEN_DW);
+    delete oScreen;
   }
 
-  delete board;
-  Tetris::deinit();
+  delete iScreen;
+  delete currBlk;
+  //delete tempBlk;
+  //delete tempBlk2;
+  //delete oScreen;
+
   cout << "(nAlloc, nFree) = (" << Matrix::get_nAlloc() << ',' << Matrix::get_nFree() << ")" << endl;  
   cout << "Program terminated!" << endl;
+
   return 0;
 }
+
