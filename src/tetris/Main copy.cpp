@@ -232,7 +232,6 @@ static ifstream infStream;
 static ofstream outfStream;
 int key_cnt=0;
 string recorded_keys = "";
-string readed_keys = "";
 
 char getTetrisKey(TetrisState state, bool fromUser, bool toFile) {
   char key;
@@ -251,19 +250,12 @@ char getTetrisKey(TetrisState state, bool fromUser, bool toFile) {
         exit(1);
       }
     }
-
-    if (readed_keys.empty() && infStream.eof() == true)
+    if (infStream.eof() == true)
       key = 'q';
-    else{
+    else
       // infStream.get(key); // why not "infStream >> key" ?
-      if (readed_keys.empty()) {
-        char buf[10];
-        infStream.read(buf, 10);
-        readed_keys.assign(buf);
-      }
-      key = readed_keys.front();
-      readed_keys.erase(0,1);
-    }
+      
+
     usleep(100000); // 100 ms
   }
   
